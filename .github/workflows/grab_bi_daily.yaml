@@ -1,11 +1,9 @@
 name: Bi daily Scheduled Script Execution
 
 on:
-  push:
-    branches: main
-   # schedule:
-   #   - cron: "0 16 * * *"
-   #   - cron: "0 4 * * *"
+  schedule:
+    - cron: "0 16 * * *"
+    - cron: "0 4 * * *"
 
 jobs:
   run-grab-script:
