@@ -4,6 +4,9 @@ library(rvest)
 library(tidyr)
 
 
+#Set ENVIRO timezone
+#?Sys.setlocale()
+
 `%nin%` = Negate(`%in%`)
 
   getnewdata <- function() {
@@ -46,12 +49,17 @@ library(tidyr)
 
   #grab data from the last 12 hours
 new_data <- getnewdata()
+saveRDS(new_data, file = "new_data.RDS")
 
 #grab archived dataset 
 old_data <- read_csv("SF_data_archive.csv")%>%
   mutate(DT_round = with_tz(DT_round, tzone = "America/Denver"))
+saveRDS(old_data, file = "old_data.RDS")
 #join archive dataset with new dataset
 all_data <- rbind(old_data, new_data)%>%
   dplyr::distinct()
+saveRDS(all_data, file = "all_data.RDS")
+
+
 #write to CSV
 write_csv(all_data, "SF_data_archive.csv")
