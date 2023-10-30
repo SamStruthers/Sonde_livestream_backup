@@ -2,7 +2,7 @@ name: Bi daily Scheduled Script Execution
 
 on:
   schedule:
-    - cron: "0 8,20 * * *"
+    - cron: "0 11 * * *"
 
 jobs:
   run-script:
