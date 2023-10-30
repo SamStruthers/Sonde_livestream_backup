@@ -2,7 +2,7 @@ name: Bi daily Scheduled Script Execution
 
 on:
   schedule:
-    - cron: "0 12 * * *"
+    - cron: "15 11 * * *"
 
 jobs:
   run-script:
@@ -18,11 +18,15 @@ jobs:
         r-version: '4.3.1' 
 
     - name: Install R packages
-      run: Rscript -e "install.packages(c('tidyverse', 'httr', 'rvest', 'tidyr'))"
+      run: | 
+             "install.packages(c('tidyverse', 'httr', 'rvest', 'tidyr'))"
+      shell: Rscript {0}
 
     - name: Run bi_daily_grab.R
-      run: Rscript bi_daily_grab.R
-
+      run: |
+            source("bi_daily_grab.R")
+      shell: Rscript {0}
+      
     - name: Commit and push changes
       run: |
         git config --global user.name 'SamStruthers'
