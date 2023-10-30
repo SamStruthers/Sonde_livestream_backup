@@ -21,7 +21,7 @@ library(tidyr)
       
       df <- data.frame(data = data_rows) %>%
         separate(data, into = c("Date", "Time", data_type, "Raw", "Alarm"), sep = "\\s+", remove = FALSE) %>%
-        mutate(DT = as.POSIXct(paste(Date, Time, sep = " "), format = "%m/%d/%Y %H:%M"),
+        mutate(DT = as.POSIXct(paste(Date, Time, sep = " "), tz = "America/Denver", format = "%m/%d/%Y %H:%M"),
                DT_round = floor_date(DT, "15 minutes")) %>%
         select(-c(Date, Time, data, Raw, Alarm, DT))
       
