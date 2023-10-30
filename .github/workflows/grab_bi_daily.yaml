@@ -36,6 +36,6 @@ jobs:
       run: |
         git config --global user.email 'actions@github.com'
         git config --global user.name 'Github Actions'
-        git add . 
+        git add SF_data_archive.csv SF_data_archive.RDS
         git commit -m "Update CSV file after bi daily pull"
         git push origin
