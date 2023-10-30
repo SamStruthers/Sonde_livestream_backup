@@ -2,7 +2,7 @@ name: Bi daily Scheduled Script Execution
 
 on:
   schedule:
-    - cron: "0 11 * * *"
+    - cron: "0 12 * * *"
 
 jobs:
   run-script:
@@ -20,7 +20,7 @@ jobs:
     - name: Install R packages
       run: Rscript -e "install.packages(c('tidyverse', 'httr', 'rvest', 'tidyr'))"
 
-    - name: Run daily_grab.R
+    - name: Run bi_daily_grab.R
       run: Rscript bi_daily_grab.R
 
     - name: Commit and push changes
