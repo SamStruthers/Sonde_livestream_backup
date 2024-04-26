@@ -10,7 +10,8 @@ library(tidyr)
 `%nin%` = Negate(`%in%`)
 
   getnewdata <- function() {
-    sfm_urls <- read_csv("sfm_urls.csv")
+    sfm_urls <- read_csv("data/sfm_urls.csv")
+    # 48 samples is 12 hours of data
     
     # Function to process a single URL
     process_url <- function(url_site, data_type) {
@@ -42,7 +43,7 @@ library(tidyr)
       #remove all -9999 values
       filter(Value %nin% c(-9999, 638.30))%>%
       #filter for deployed date
-      filter(DT_round > as.POSIXct("2023-10-24 14:45:00", format = "%Y-%m-%d %H:%M:%S"))
+      filter(DT_round > as.POSIXct("2024-04-25 10:00:00", format = "%Y-%m-%d %H:%M:%S"))
     
     return(SF_long_data)
   }
@@ -52,7 +53,7 @@ new_data <- getnewdata()
 
 
 #grab archived dataset 
-old_data <- read_csv("SF_data_archive.csv")%>%
+old_data <- read_csv("data/SF_data_archive2024.csv")%>%
   mutate(DT_round = with_tz(DT_round, tzone = "America/Denver"))
 
 #join archive dataset with new dataset
@@ -62,5 +63,5 @@ all_data <- rbind(old_data, new_data)%>%
 
 
 #write to CSV and RDS 
-write_csv(all_data, "SF_data_archive.csv")
-saveRDS(all_data, file = "SF_data_archive.RDS")
+write_csv(all_data, "data/SF_data_archive2024.csv")
+saveRDS(all_data, file = "data/SF_data_archive2024.RDS")
