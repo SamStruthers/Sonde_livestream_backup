@@ -10,7 +10,7 @@ library(tidyr)
 `%nin%` = Negate(`%in%`)
 
   getnewdata <- function() {
-    sfm_urls <- read_csv("data/sfm_urls.csv")
+    sfm_urls <- read_csv("data/sfm_urls.csv", show_col_types = FALSE)
     # 48 samples is 12 hours of data
     
     # Function to process a single URL
