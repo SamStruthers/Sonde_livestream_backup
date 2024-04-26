@@ -1,0 +1,10 @@
+site_number,site_url,data_type
+11,https://wetmapgc.wetec.us/cgi-bin/datadisp_q?ID=11517011&NM=10000,Depth
+12,https://wetmapgc.wetec.us/cgi-bin/datadisp_q?ID=11517012&NM=10000,pH
+13,https://wetmapgc.wetec.us/cgi-bin/datadisp_q?ID=11517013&NM=10000,Turbidity
+15,https://wetmapgc.wetec.us/cgi-bin/datadisp_q?ID=11517015&NM=10000,Specific_Conductivity
+16,https://wetmapgc.wetec.us/cgi-bin/datadisp_q?ID=11517016&NM=10000,FDOM
+17,https://wetmapgc.wetec.us/cgi-bin/datadisp_q?ID=11517017&NM=10000,DO
+18,https://wetmapgc.wetec.us/cgi-bin/datadisp_q?ID=11517018&NM=10000,DO_Sat
+19,https://wetmapgc.wetec.us/cgi-bin/datadisp_q?ID=11517019&NM=10000,Chl-a
+20,https://wetmapgc.wetec.us/cgi-bin/datadisp_q?ID=11517020&NM=10000,Temperature
