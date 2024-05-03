@@ -23,8 +23,9 @@ library(tidyr)
       df <- data.frame(data = data_rows) %>%
         separate(data, into = c("Date", "Time", data_type, "Raw", "Alarm"), sep = "\\s+", remove = FALSE) %>%
         mutate(DT = as.POSIXct(paste(Date, Time, sep = " "), tz = "America/Denver", format = "%m/%d/%Y %H:%M"),
-               DT_round = floor_date(DT, "15 minutes")) %>%
-        select(-c(Date, Time, data, Raw, Alarm, DT))
+               DT_round = round_date(DT, "15 minutes"), 
+               DT_floor = floor_date(DT, "15 minutes")) %>%   
+        select(-c(Date, Time, data, Raw, Alarm))
       
       return(df)
     }
@@ -33,11 +34,11 @@ library(tidyr)
     SF_data_list <- map2(sfm_urls$site_url, sfm_urls$data_type, process_url)
     
     # Merge the data frames in the list into a single data frame
-    SF_data <- reduce(SF_data_list, left_join, by = "DT_round")
+    SF_data <- reduce(SF_data_list, left_join, by = c("DT_round", "DT_floor", "DT"))
     
     #pivot to longer after joining all datasets
     SF_long_data <- SF_data %>%
-      pivot_longer( cols = -DT_round, names_to = "Measurement", values_to = "Value" )%>%
+      pivot_longer( cols = -c(DT_round, DT, DT_floor), names_to = "Measurement", values_to = "Value" )%>%
       #make numeric
       mutate(Value = as.numeric(Value))%>%
       #remove all -9999 values
