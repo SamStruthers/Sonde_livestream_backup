@@ -16,10 +16,15 @@ ui <- fluidPage(
       downloadButton("downloadData", "Download Data")
     ),
     mainPanel(
-      plotlyOutput("dataPlot")
+      tabsetPanel(
+        tabPanel("Last Week Data", plotlyOutput("last_week_plot")),
+        tabPanel("Full 2024 Data", plotlyOutput("dataPlot"))
+        
+      )
     )
   )
 )
+
 
 # Define server
 server <- function(input, output) {
@@ -72,6 +77,19 @@ server <- function(input, output) {
     return(SF_long_data)
   }
   
+  # Function to filter data for the last 5 days
+  last_week_data <- function(data) {
+    # Get the current date and time
+    current_time <- Sys.time()
+    
+    # Filter the data to include only the last 5 days
+    filtered_data <- data %>%
+      filter(DT_round >= (current_time - days(7)))
+    
+    return(filtered_data)
+  }
+  
+  
   # Display status message
   output$status <- renderText({
     "Click the 'Download Data' button to fetch and download data."
@@ -95,7 +113,21 @@ server <- function(input, output) {
     p <- ggplot(df, aes(x = DT_round, y = Value)) +
       geom_line() +
       theme_bw() +
-      facet_wrap(~w_units, scales = "free_y")
+      facet_wrap(~w_units, scales = "free_y")+
+      labs(title = "2024 Data", x = "Date", y = "Sensor Value")
+    
+    ggplotly(p)
+  })
+  
+  output$last_week_plot <- renderPlotly({
+    df <- getAPIdata()
+    df_last5 <- last_week_data(df)
+    
+    p <- ggplot(df_last5, aes(x = DT_round, y = Value)) +
+      geom_line() +
+      theme_bw() +
+      facet_wrap(~w_units, scales = "free_y")+
+      labs(title = "Last 7 Days", x = "Date", y = "Sensor Value")
     
     ggplotly(p)
   })
