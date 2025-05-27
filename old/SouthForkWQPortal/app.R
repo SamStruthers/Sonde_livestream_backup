@@ -29,8 +29,8 @@ ui <- fluidPage(
 # Define server
 server <- function(input, output) {
   # Function to fetch data from the API
-  getAPIdata <- function() {
-    sfm_urls <- read_csv("sfm_urls.csv")
+  getAPIdata <- function(timeperiod = "full") {
+    sfm_urls <- read_csv("sfm_urls.csv", show_col_types = FALSE)
     
     # Function to process a single URL
     process_url <- function(url_site, data_type) {
@@ -48,8 +48,15 @@ server <- function(input, output) {
       return(df)
     }
     
-    # map process_url over each row in sfm_urls
-    SF_data_list <- map2(sfm_urls$site_url, sfm_urls$data_type, process_url)
+    
+    if(timeperiod == "full"){
+      # map process_url over each row in sfm_urls
+      SF_data_list <- map2(sfm_urls$site_url, sfm_urls$data_type, process_url)
+      
+    }else{
+      # map process_url over each row in sfm_urls
+      SF_data_list <- map2(sfm_urls$site_url_week, sfm_urls$data_type, process_url)
+    }
     
     # Merge the data frames in the list into a single data frame
     SF_data <- reduce(SF_data_list, left_join, by = "DT_round")
@@ -69,7 +76,7 @@ server <- function(input, output) {
         Measurement == "Depth" ~ "Depth (ft)",
         Measurement == "pH" ~ "pH",
         Measurement == "Turbidity" ~ "Turbidity (NTU)",
-        Measurement == "Specific_Conductivity" ~ "Spec Cond (uS/cm)",
+        Measurement == "Specific_Conductivity" ~ "Specific Conductivity (uS/cm)",
         Measurement == "FDOM" ~ "FDOM (RFU)",
         Measurement == "DO" ~ "DO (mg/L)",
         Measurement == "Chl-a" ~ "Chl-a (RFU)",
@@ -77,17 +84,17 @@ server <- function(input, output) {
     return(SF_long_data)
   }
   
-  # Function to filter data for the last 5 days
-  last_week_data <- function(data) {
-    # Get the current date and time
-    current_time <- Sys.time()
-    
-    # Filter the data to include only the last 5 days
-    filtered_data <- data %>%
-      filter(DT_round >= (current_time - days(7)))
-    
-    return(filtered_data)
-  }
+  # # Function to filter data for the last 5 days
+  # last_week_data <- function(data) {
+  #   # Get the current date and time
+  #   current_time <- Sys.time()
+  #   
+  #   # Filter the data to include only the last 5 days
+  #   filtered_data <- data %>%
+  #     filter(DT_round >= (current_time - days(7)))
+  #   
+  #   return(filtered_data)
+  # }
   
   
   # Display status message
@@ -108,9 +115,9 @@ server <- function(input, output) {
   
   # Plot the data using Plotly
   output$dataPlot <- renderPlotly({
-    df <- getAPIdata()
+    df <- getAPIdata(timeperiod = "full")
     
-    p <- ggplot(df, aes(x = DT_round, y = Value)) +
+    p <- ggplot(df, aes(x = DT_round, y = value)) +
       geom_line() +
       theme_bw() +
       facet_wrap(~w_units, scales = "free_y")+
@@ -120,10 +127,9 @@ server <- function(input, output) {
   })
   
   output$last_week_plot <- renderPlotly({
-    df <- getAPIdata()
-    df_last5 <- last_week_data(df)
+    df_last7 <- getAPIdata(timeperiod = "week")
     
-    p <- ggplot(df_last5, aes(x = DT_round, y = Value)) +
+    p <- ggplot(df_last7, aes(x = DT_round, y = Value)) +
       geom_line() +
       theme_bw() +
       facet_wrap(~w_units, scales = "free_y")+

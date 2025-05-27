@@ -5,7 +5,7 @@ account: sam-struthers001
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 10322973
-bundleId: 8769238
+bundleId: 8791389
 url: https://sam-struthers001.shinyapps.io/SouthForkWQPortal/
 version: 1
 asMultiple: FALSE
