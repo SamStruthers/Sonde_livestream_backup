@@ -31,7 +31,7 @@ retrieve_WET_api_data <- function(site_code, start_datetime, end_datetime = Sys.
       }
     }
   }else{
-    start_datetime <-with_tz(start_datetime, tzone = "MST") + hours(1) # not sure why this adjustment is not working correctly...
+    start_datetime <-with_tz(start_datetime, tzone = "MST") # not sure why this adjustment is not working correctly...
   }
   
   if(is.character(end_datetime)){
@@ -45,7 +45,7 @@ retrieve_WET_api_data <- function(site_code, start_datetime, end_datetime = Sys.
       }
     }
   }else{
-    end_datetime <-with_tz(end_datetime, tzone = "MST") + hours(1)# not sure why this adjustment is not working correctly...
+    end_datetime <-with_tz(end_datetime, tzone = "MST") + hours(2)# not sure why this adjustment is not working correctly...
   }
   
   if(time_window == "2 hours"){
@@ -90,7 +90,7 @@ retrieve_WET_api_data <- function(site_code, start_datetime, end_datetime = Sys.
     df <- data.frame(data = data_rows) %>%
       separate(data, into = c("Date", "Time", "value", "Raw", "Alarm"), sep = "\\s+", remove = FALSE)%>%
       mutate(value = ifelse(!is.na(value), as.numeric(value), NA)) %>%
-      mutate(DT = as.POSIXct(paste0(Date, " ", Time), format = "%m/%d/%Y %H:%M:%S", tz = "MST"),
+      mutate(DT = as.POSIXct(paste0(Date, " ", Time), format = "%m/%d/%Y %H:%M:%S", tz = "America/Denver"),
              DT_round = round_date(DT, unit = "15 minutes"), 
              DT_round = with_tz(DT_round, tzone = "MST"))%>%
       select(-c(Date, Time, data, Raw, Alarm, DT)) %>%
@@ -110,7 +110,7 @@ retrieve_WET_api_data <- function(site_code, start_datetime, end_datetime = Sys.
     bind_rows()%>%
     #filter for selected start/end dates
     filter(between(DT_round, start_datetime, end_datetime)) %>%
-    filter(value %nin% c(-9999, 638.30)) %>% # these are values used by WET engineers to test system of if system is down
+    filter(value %nin% c(-9999, 638.30, -99.99)) %>% # these are values used by WET engineers to test system of if system is down
     # Filter for deployed date based on site_code
     # WET Engineers were performing in house tests with the data to test transmission so we want to remove all of these always
     filter(
@@ -129,9 +129,10 @@ sites <- c("sfm", "chd", "pfal")
 new_data <- map_dfr(sites,
                     ~retrieve_WET_api_data(
                       site_code = .x,
-                      start_datetime = Sys.time()-hours(4),
+                      start_datetime = "2025-04-01 00:00",
                       end_datetime = Sys.time(),
-                      data_type = "all"))
+                      data_type = "all", 
+                      time_window = "all"))
 
 #grab archived dataset
 old_data <- read_parquet("data_backup/upper_CLP_WQ_data_2025.parquet")%>%
