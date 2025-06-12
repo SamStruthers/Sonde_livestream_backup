@@ -135,7 +135,7 @@ new_data <- map_dfr(sites,
 
 #grab archived dataset
 old_data <- read_parquet("data_backup/upper_CLP_WQ_data_2025.parquet")%>%
-  mutate(DT_round = with_tz(DT_round, tzone = "America/Denver"))
+  mutate(DT_round = with_tz(DT_round, tzone = "MST"))
 
 
 #join archive dataset with new dataset
