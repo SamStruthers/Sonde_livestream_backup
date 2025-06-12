@@ -7,10 +7,13 @@ library(arrow)
 
 #Set ENVIRO timezone
 #?Sys.setlocale()
+#Sys.setenv(TZ = "UTC")
+
+
 
 `%nin%` = Negate(`%in%`)
 
-retrieve_WET_api_data <- function(site_code, start_datetime, end_datetime = Sys.time(), data_type = "all") {
+retrieve_WET_api_data <- function(site_code, start_datetime, end_datetime = Sys.time(), data_type = "all", time_window = "2 hours") {
   # Construct the URL for the API request
   `%nin%` = Negate(`%in%`)
   #convert start and end datetimes
@@ -27,6 +30,8 @@ retrieve_WET_api_data <- function(site_code, start_datetime, end_datetime = Sys.
         stop("start_datetime could not be parsed. Please provide a valid datetime in 'YYYY-MM-DD HH:MM' format.")
       }
     }
+  }else{
+    start_datetime <-with_tz(start_datetime, tzone = "MST") + hours(1) # not sure why this adjustment is not working correctly...
   }
   
   if(is.character(end_datetime)){
@@ -39,17 +44,26 @@ retrieve_WET_api_data <- function(site_code, start_datetime, end_datetime = Sys.
         stop("end_datetime could not be parsed. Please provide a valid datetime in 'YYYY-MM-DD HH:MM' format.")
       }
     }
+  }else{
+    end_datetime <-with_tz(end_datetime, tzone = "MST") + hours(1)# not sure why this adjustment is not working correctly...
   }
   
-  #WET system uses number of values to display to create urls so we are going to back calculate (assuming 4 datapoints an hour)
-  increments_since_now <- round(as.numeric(difftime(Sys.time(), start_datetime, units = "hours"))*4, digits = 0)
+  if(time_window == "2 hours"){
+    increments_since_now = 10 # really should be 8 but we will use 10 to be safe
+  }else{
+    #WET system uses number of values to display to create urls so we are going to back calculate (assuming 4 datapoints an hour)
+    #add an hour to be safe
+    increments_since_now <- round(as.numeric(difftime(with_tz(Sys.time()+hours(1), tzone = "MST"), start_datetime, units = "hours"))*4, digits = 0)
+  }
+  
+  
   #tibble of the sensor numbers and their corresponding data types
   sensor_numbers <- tibble(data_type = c("Depth", "pH", "Turbidity", "Specific Conductivity",
                                          "FDOM Fluorescence", "DO", "Chl-a Fluorescence", "Temperature"),
                            sensor_number = c(11, 12, 13, 15, 16, 17,19,20))
   #tibble of the site numbers and their corresponding site codes
   site_numbers <- tibble(site_code = c("sfm", "chd", "pfal"),
-                         site_num = c(115170, 1152900, 115310))%>%
+                         site_num = c(115170, 115290, 115310))%>%
     filter(site_code == !!site_code) #filter for sites selected
   
   #grab either all parameters or only the selected parameters
@@ -76,8 +90,9 @@ retrieve_WET_api_data <- function(site_code, start_datetime, end_datetime = Sys.
     df <- data.frame(data = data_rows) %>%
       separate(data, into = c("Date", "Time", "value", "Raw", "Alarm"), sep = "\\s+", remove = FALSE)%>%
       mutate(value = ifelse(!is.na(value), as.numeric(value), NA)) %>%
-      mutate(DT = as.POSIXct(paste0(Date, " ", Time), format = "%m/%d/%Y %H:%M:%S"),
-             DT_round = round_date(DT, unit = "15 minutes"))%>%
+      mutate(DT = as.POSIXct(paste0(Date, " ", Time), format = "%m/%d/%Y %H:%M:%S", tz = "MST"),
+             DT_round = round_date(DT, unit = "15 minutes"), 
+             DT_round = with_tz(DT_round, tzone = "MST"))%>%
       select(-c(Date, Time, data, Raw, Alarm, DT)) %>%
       group_by(DT_round)%>%
       summarise(value = mean(value, na.rm = TRUE), .groups = "drop")%>%
@@ -94,14 +109,14 @@ retrieve_WET_api_data <- function(site_code, start_datetime, end_datetime = Sys.
                   process_urls)%>%
     bind_rows()%>%
     #filter for selected start/end dates
-    filter(start_datetime <= DT_round & end_datetime >= DT_round ) %>%
+    filter(between(DT_round, start_datetime, end_datetime)) %>%
     filter(value %nin% c(-9999, 638.30)) %>% # these are values used by WET engineers to test system of if system is down
     # Filter for deployed date based on site_code
     # WET Engineers were performing in house tests with the data to test transmission so we want to remove all of these always
     filter(
-      (site_code == "sfm" & DT_round > ymd_hms("2024-04-25 10:00:00")) |
-        (site_code == "chd" & DT_round > ymd_hms("2025-03-28 10:00:00")) |
-        (site_code == "pfal" & DT_round > ymd_hms("2024-09-25 10:00:00")))%>%
+      (site_code == "sfm" & DT_round > ymd_hms("2024-04-25 10:00:00", tz = "MST")) |
+        (site_code == "chd" & DT_round > ymd_hms("2025-03-28 10:00:00", tz = "MST")) |
+        (site_code == "pfal" & DT_round > ymd_hms("2024-09-25 10:00:00", tz = "MST")))%>%
     #remove NaN rows
     na.omit()
   
@@ -114,8 +129,8 @@ sites <- c("sfm", "chd", "pfal")
 new_data <- map_dfr(sites,
                     ~retrieve_WET_api_data(
                       site_code = .x,
-                      start_date = Sys.time()-hours(4),
-                      end_date = Sys.time(),
+                      start_datetime = Sys.time()-hours(4),
+                      end_datetime = Sys.time(),
                       data_type = "all"))
 
 #grab archived dataset
